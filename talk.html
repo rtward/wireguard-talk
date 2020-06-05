@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <title>Project Nephology: Wireguard</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="https://unpkg.com/reveal.js@3.9.2//css/reset.css">
+  <link rel="stylesheet" href="https://unpkg.com/reveal.js@3.9.2//css/reveal.css">
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+  </style>
+  <link rel="stylesheet" href="https://unpkg.com/reveal.js@3.9.2//css/theme/black.css" id="theme">
+  <!-- Printing and PDF exports -->
+  <script>
+    var link = document.createElement( 'link' );
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+    link.href = window.location.search.match( /print-pdf/gi ) ? 'https://unpkg.com/reveal.js@3.9.2//css/print/pdf.css' : 'https://unpkg.com/reveal.js@3.9.2//css/print/paper.css';
+    document.getElementsByTagName( 'head' )[0].appendChild( link );
+  </script>
+  <!--[if lt IE 9]>
+  <script src="https://unpkg.com/reveal.js@3.9.2//lib/js/html5shiv.js"></script>
+  <![endif]-->
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+<section id="title-slide">
+  <h1 class="title">Project Nephology: Wireguard</h1>
+</section>
+
+<section id="why" class="slide level1">
+<h1>Why</h1>
+</section>
+<section id="speed" class="slide level1">
+<h1>Speed</h1>
+<p>Wireguard is a lot faster, almost twice as fast in my testing on a Raspberry Pi 4</p>
+</section>
+<section id="modern-crypto" class="slide level1">
+<h1>Modern Crypto</h1>
+<p>Includes only modern crypto suites, no legacy, and uses higher performance encryption</p>
+</section>
+<section id="udp" class="slide level1">
+<h1>UDP</h1>
+<p>Only uses UDP for transport (boo, kinda)</p>
+</section>
+<section id="simple" class="slide level1">
+<h1>Simple</h1>
+<p>Includes very few features, complex behavior can be built on top of it though</p>
+</section>
+<section id="terms" class="slide level1">
+<h1>Terms</h1>
+</section>
+<section id="peer" class="slide level1">
+<h1>Peer</h1>
+<p>Any remote connection from one system to another. In a standard client-server type setup, the client would call the server a peer, and vice versa.</p>
+</section>
+<section id="pre-shared-key" class="slide level1">
+<h1>Pre-Shared-Key</h1>
+<p>A pre-shared symmetric encryption key which provides additional security, and should be resistent to quantum computing attacks.</p>
+</section>
+<section id="installation" class="slide level1">
+<h1>Installation</h1>
+<p>Since Wireguard is built as a kernel module, for newer kernels, you won’t need to install anything. You will still have to install the command line tools though.</p>
+<ul>
+<li>Install command line tools <code>wireguard-tools</code> in Arch</li>
+<li>Install kernel module (not needed for kernel &gt;= 5.6)</li>
+</ul>
+</section>
+<section id="generate-keys" class="slide level1">
+<h1>Generate Keys</h1>
+<p>You weill need to generate a public private keypair for each peer. So for a simple client-server setup, you’ll need two keypairs. You can also optionally generate a pre-shared-key for post-quantum crypto resistence.</p>
+</section>
+<section id="server-key" class="slide level1">
+<h1>Server Key</h1>
+<ul>
+<li><code>wg genkey &gt; /etc/wireguard/server.key</code></li>
+<li><code>chmod 600 /etc/wireguard/server.key</code></li>
+<li><code>wg pubkey &lt; /etc/wireguard/server.key &gt; /etc/wireguard/server.pub</code></li>
+</ul>
+</section>
+<section id="laptop-key" class="slide level1">
+<h1>Laptop key</h1>
+<ul>
+<li><code>wg genkey &gt; /etc/wireguard/laptop.key</code></li>
+<li><code>chmod 600 /etc/wireguard/laptop.key</code></li>
+<li><code>wg pubkey &lt; /etc/wireguard/laptop.key &gt; /etc/wireguard/laptop.pub</code></li>
+</ul>
+</section>
+<section id="pre-shared-key-1" class="slide level1">
+<h1>Pre-Shared key</h1>
+<p>This is optional</p>
+<ul>
+<li><code>wg genpsk &gt; /etc/wireguard/server-laptop.psk</code></li>
+<li><code>chmod 600 /etc/wireguard/server-laptop.psk</code></li>
+</ul>
+</section>
+<section id="setup-host" class="slide level1">
+<h1>Setup host</h1>
+<p>You an control wireguard via native wg-tools commands, systemd-networkd, netctl, or NetworkManager. Netctl or systemd-network should be used for server / headless installations, but NetworkManager is the easiest for user machines.</p>
+</section>
+<section id="setup-host-1" class="slide level1">
+<h1>Setup host</h1>
+<p>Create the wireguard config</p>
+<p><code>/etc/wireguard/wg0.conf</code></p>
+<pre><code>[Interface]
+ListenPort = 51871
+PrivateKey = SERVER_PRIVATE_KEY
+
+[Peer]
+PublicKey = LAPTOP_PUBLIC_KEY
+PresharedKey = SERVER_LAPTOP_PRE_SHARED_KEY
+AllowedIPs = 192.168.47.0/24, 192.168.1.0/24</code></pre>
+</section>
+<section id="setup-host-2" class="slide level1">
+<h1>Setup host</h1>
+<p>Create the netctl config</p>
+<p><code>/etc/netctl/wg0</code></p>
+<pre><code>Description=&quot;WireGuard VPN Server&quot;
+Interface=wg0
+Connection=wireguard
+WGConfigFile=/etc/wireguard/wg0.conf
+
+IP=static
+Address=(&#39;192.168.47.1/24&#39;)</code></pre>
+</section>
+<section id="setup-host-3" class="slide level1">
+<h1>Setup host</h1>
+<p>Enable the netctl config</p>
+<p><code>netctl start wg0</code></p>
+</section>
+<section id="setup-client" class="slide level1">
+<h1>Setup client</h1>
+<p>In a client mode, you have a similar config, but you specify a peer endpoint that wireguard will connect to, and optionally a list of routes that should be sent through the remote peer.</p>
+</section>
+<section id="setup-client-1" class="slide level1">
+<h1>Setup client</h1>
+<p>Create the wireguard config</p>
+<p><code>/etc/wireguard/wg0.conf</code></p>
+<pre><code>[Interface]
+PrivateKey = LAPTOP_PRIVATE_KEY
+
+[Peer]
+PublicKey = SERVER_PUBLIC_KEY
+PresharedKey = SERVER_LAPTOP_PRE_SHARED_KEY
+AllowedIPs = 192.168.47.1/32
+Endpoint = SERVER_ADDRESS_AND_PORT</code></pre>
+</section>
+<section id="setup-client---netctl-config" class="slide level1">
+<h1>Setup client - netctl config</h1>
+<p>Create the netctl config</p>
+<p><code>/etc/netctl/wg0</code></p>
+<pre><code>Description=&quot;WireGuard VPN Server&quot;
+Interface=wg0
+Connection=wireguard
+WGConfigFile=/etc/wireguard/wg0.conf
+
+IP=static
+Address=(&#39;192.168.47.10/24&#39;)
+Routes=(&#39;192.168.1.0/24&#39;)
+Routes=(&#39;0.0.0.0/0&#39;)</code></pre>
+</section>
+<section id="setup-client---enable-the-connection" class="slide level1">
+<h1>Setup client - Enable the connection</h1>
+<p>Enable the netctl config</p>
+<p><code>netctl start wg0</code></p>
+</section>
+<section id="automated-guis" class="slide level1">
+<h1>Automated GUIs</h1>
+<p>A manual config would probably be my preference for joining two networks, or setting up a static remote connection, but if you have multiple devices you want to connect, one of the automated guis is the way to go. A few different ones I’ve tried.</p>
+</section>
+<section id="wireguard-access-server" class="slide level1">
+<h1>wireguard-access-server</h1>
+<p>This is the one I ended up going with, supports several different auth modes, and makes it dead simple to add clients. Also includes a handy DNS proxy that makes some DNS setups easier. This is the main reason I ended up going with it.</p>
+</section>
+<section id="wg-ui" class="slide level1">
+<h1>wg-ui</h1>
+<p>I had trouble with DNS on this one, and it was kinda flaky and hard to debug</p>
+</section>
+<section id="subspace" class="slide level1">
+<h1>subspace</h1>
+<p>Didn’t try this one, seems to be abandoned, no commits in over a year, does look the most polished though</p>
+</section>
+<section id="wg-gen-web" class="slide level1">
+<h1>wg-gen-web</h1>
+<p>More complicated than the others, has more config options though</p>
+</section>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/reveal.js@3.9.2//js/reveal.js"></script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        // Push each slide change to the browser history
+        history: true,
+
+        // Optional reveal.js plugins
+        dependencies: [
+          { src: 'https://unpkg.com/reveal.js@3.9.2//lib/js/classList.js', condition: function() { return !document.body.classList; } },
+          { src: 'https://unpkg.com/reveal.js@3.9.2//plugin/zoom-js/zoom.js', async: true },
+          { src: 'https://unpkg.com/reveal.js@3.9.2//plugin/notes/notes.js', async: true }
+        ]
+      });
+    </script>
+    </body>
+</html>
